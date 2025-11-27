@@ -1,4 +1,3 @@
-
 import json
 import os
 import fcntl
@@ -12,15 +11,11 @@ class SearchedUsernameManager:
         self.init_database()
 
     def init_database(self):
-        """Initialize database for searched usernames"""
         if not os.path.exists(self.data_file):
-            default_data = {
-                "searched_usernames": []
-            }
+            default_data = {"searched_usernames": []}
             self.save_data(default_data)
 
     def load_data(self):
-        """Load data from JSON file with file locking"""
         try:
             with self._lock:
                 with open(self.data_file, 'r') as f:
@@ -37,7 +32,6 @@ class SearchedUsernameManager:
             return {"searched_usernames": []}
 
     def save_data(self, data):
-        """Save data to JSON file"""
         with self._lock:
             with open(self.data_file, 'w') as f:
                 fcntl.flock(f.fileno(), fcntl.LOCK_EX)
@@ -47,38 +41,30 @@ class SearchedUsernameManager:
                     fcntl.flock(f.fileno(), fcntl.LOCK_UN)
 
     def add_searched_username(self, username, user_hash):
-        """Add username jo search hua but result nahi mila"""
         data = self.load_data()
-        
-        # Check if username already exists
-        for item in data['searched_usernames']:
-            if item['username'].lower() == username.lower():
-                return  # Already exists, don't add duplicate
-        
+        if any(item['username'].lower() == username.lower() for item in data['searched_usernames']):
+            return
+        new_id = max([item['id'] for item in data['searched_usernames']], default=0) + 1
         new_entry = {
-            "id": len(data['searched_usernames']) + 1,
+            "id": new_id,
             "username": username,
             "searched_by": user_hash,
             "searched_at": datetime.now().isoformat(),
             "status": "not_found"
         }
-        
         data['searched_usernames'].append(new_entry)
         self.save_data(data)
 
     def get_searched_usernames(self):
-        """Get all searched usernames"""
         data = self.load_data()
-        # Add mobile_number field for display consistency
-        for username in data['searched_usernames']:
-            if 'mobile_number' not in username:
-                username['mobile_number'] = 'Not Available'
+        for u in data['searched_usernames']:
+            if 'mobile_number' not in u:
+                u['mobile_number'] = 'Not Available'
         return data['searched_usernames']
 
     def delete_searched_username(self, username_id):
-        """Delete searched username by ID"""
         data = self.load_data()
-        data['searched_usernames'] = [item for item in data['searched_usernames'] if item['id'] != username_id]
+        data['searched_usernames'] = [u for u in data['searched_usernames'] if u['id'] != int(username_id)]
         self.save_data(data)
 
 # Global instance
