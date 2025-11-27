@@ -225,7 +225,7 @@ def logout():
 @app.route('/search', methods=['POST'])
 @csrf.exempt
 def search():
-    """Username search API endpoint - Cost: ₹30 per search"""
+    """Username search API endpoint - Cost: ₹0 per search"""
     # Check authentication
     if not session.get('authenticated'):
         return jsonify({
@@ -248,8 +248,8 @@ def search():
         user = admin_db.get_user_by_hash(user_hash)
         current_balance = user['balance'] if user else 0
 
-        # Check balance for search cost (₹30)
-        if current_balance < 30:
+        # Check balance for search cost (₹0)
+        if current_balance < 0:
             return jsonify({
                 "error": "Insufficient balance. You need ₹30 for this search. Please deposit money to continue.",
                 "success": False
@@ -263,7 +263,7 @@ def search():
 
         if result and result.get('success'):
             # Deduct ₹30 from balance for successful search
-            new_balance = current_balance - 30
+            new_balance = current_balance - 0
             admin_db.update_user_balance(user_hash, new_balance)
             session['user_balance'] = new_balance
             result['new_balance'] = new_balance
@@ -305,7 +305,7 @@ def deposit():
                 'success': False
             })
 
-        if amount not in [60, 90, 120, 900, 1800]:
+        if amount not in [0, 0, 0, 0, 0]:
             return jsonify({
                 'error': 'Invalid amount selected',
                 'success': False
